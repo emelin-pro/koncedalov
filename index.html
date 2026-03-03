@@ -37,42 +37,56 @@
       color: #1e3a5f;
     }
 
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    /* Заголовок кейса: две строки */
+    .case-header {
       margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 20px;
     }
-
-    h1 {
+    .case-label {
+      font-size: 0.9rem;
+      color: #6b7a8f;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+    }
+    .case-title {
       font-size: 1.7rem;
       font-weight: 600;
-      letter-spacing: -0.02em;
       color: #0f172a;
+      line-height: 1.3;
     }
 
-    .progress-badge {
-      background: #eef2f6;
-      padding: 6px 16px;
+    /* Таймбар */
+    .timeline-container {
+      margin-bottom: 20px;
+      background: #f1f4f9;
       border-radius: 40px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #1e3a5f;
-      display: inline-flex;
+      padding: 16px 20px;
+      display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .timeline-bar {
+      flex: 1;
+      height: 8px;
+      background: #d9e2ef;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .timeline-progress {
+      height: 100%;
+      background: #1d4ed8;
+      border-radius: 8px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    .timeline-percent {
+      font-weight: 600;
+      color: #1d4ed8;
       white-space: nowrap;
     }
-    .progress-badge .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 10px;
-      background: #1d4ed8;
-    }
 
-    /* ответственный (скрытый по умолчанию) */
+    /* ответственный */
     .responsible-block {
       margin-bottom: 30px;
       cursor: pointer;
@@ -84,6 +98,11 @@
       gap: 8px;
       font-weight: 500;
       color: #1e3a5f;
+    }
+    .responsible-header .hint {
+      font-size: 0.8rem;
+      color: #7f8fa3;
+      margin-left: 4px;
     }
     .responsible-details {
       margin-top: 8px;
@@ -108,19 +127,16 @@
       padding: 8px 0;
       width: 100%;
     }
-    /* линия теперь рисуется через псевдоэлемент, прикреплённый к родителю */
     .progress-horizontal::before {
       content: '';
       position: absolute;
       top: 38px;
-      left: 0;
-      right: 0;
+      left: 40px;
+      right: 40px;
       height: 3px;
       background: linear-gradient(90deg, #d0dbea, #a6b8cf);
       border-radius: 6px;
       z-index: 0;
-      margin-left: 40px;
-      margin-right: 40px;
     }
     .step-h {
       position: relative;
@@ -135,6 +151,12 @@
       border-radius: 20px;
       transition: flex 0.2s, background 0.2s;
       cursor: pointer;
+    }
+    .step-h .hint-icon {
+      font-size: 0.8rem;
+      color: #8a9bb5;
+      margin-top: 4px;
+      opacity: 0.7;
     }
     .step-h.expanded {
       flex: 2 1 0;
@@ -197,18 +219,10 @@
     .step-h:not(.expanded) .step-description {
       display: none;
     }
-    .step-description .eta {
+    .work-days-info {
+      font-weight: 600;
+      color: #1d4ed8;
       margin-top: 6px;
-      font-weight: 500;
-      color: #0047ab;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .step-description .days-left {
-      margin-top: 4px;
-      font-size: 0.8rem;
-      color: #5f6f84;
     }
 
     /* горизонтальный скролл при большом количестве этапов */
@@ -288,7 +302,6 @@
     @media (max-width: 768px) {
       .progress-horizontal { display: none; }
       .progress-vertical { display: flex; }
-      .header-row { flex-direction: column; align-items: flex-start; }
     }
 
     .info-hint {
@@ -306,19 +319,26 @@
     💼 <span id="clientNameDisplay">Концедалов С.И.</span>
   </div>
 
-  <!-- Строка с заголовком и индикатором прогресса -->
-  <div class="header-row">
-    <h1 id="caseNameDisplay">Кейс: Стратегический аудит ситуации и выбор модели исполнения обязательств</h1>
-    <div class="progress-badge" id="progressBadge">
-      <span class="dot"></span> <span id="progressText">2 из 7 этапов</span>
-    </div>
+  <!-- Заголовок кейса (две строки) -->
+  <div class="case-header">
+    <span class="case-label">Кейс</span>
+    <span class="case-title" id="caseNameDisplay">Стратегический аудит ситуации и выбор модели исполнения обязательств</span>
   </div>
 
-  <!-- Блок ответственного (скрытый) -->
+  <!-- Таймбар всего кейса -->
+  <div class="timeline-container" id="timelineContainer" style="display: none;">
+    <div class="timeline-bar">
+      <div class="timeline-progress" id="timelineProgress"></div>
+    </div>
+    <span class="timeline-percent" id="timelinePercent">0%</span>
+  </div>
+
+  <!-- Ответственный -->
   <div class="responsible-block" id="responsibleBlock">
     <div class="responsible-header">
       <span class="responsible-icon">🎓</span>
       <span>ваш координатор</span>
+      <span class="hint">🔽</span>
     </div>
     <div class="responsible-details" id="responsibleDetails">
       <span id="responsibleNameDisplay">Иван Петров, клиентский менеджер</span><br>
@@ -326,10 +346,10 @@
     </div>
   </div>
 
-  <!-- Горизонтальный прогресс (десктоп) -->
+  <!-- Горизонтальный прогресс -->
   <div class="progress-horizontal" id="progressHorizontal"></div>
 
-  <!-- Вертикальный прогресс (мобильный) -->
+  <!-- Вертикальный прогресс -->
   <div class="progress-vertical" id="progressVertical"></div>
   <div class="info-hint">📋 Данные обновляются автоматически</div>
 </div>
@@ -340,19 +360,19 @@
     const API_KEY = '$2a$10$04rxd6FFWKwU6F5lh7rxfepeHDiMl50NHzePfFIwq71to/inJGDgW';
     const BASE_URL = 'https://api.jsonbin.io/v3/b';
 
-    // Данные по умолчанию (те же, что в админке)
+    // Данные по умолчанию (синхронизированы с админкой)
     const defaultData = {
       caseName: 'Стратегический аудит ситуации и выбор модели исполнения обязательств',
       clientName: 'Концедалов С.И.',
       responsible: { name: 'Иван Петров', position: 'клиентский менеджер', phone: '+7 (999) 123-45-67' },
       stages: [
-        { id: 0, title: 'Брифинг и анализ задачи', description: 'Клиентский менеджер уточняет основные моменты задачи и ожидания по результату.', estimatedTime: '1 день', summary: 'Проведён первичный бриф, зафиксированы цели.', nextActions: 'Ожидайте коммерческое предложение.', status: 'completed', startDate: '2026-03-01', endDate: '2026-03-02' },
-        { id: 1, title: 'Подготовка коммерческого предложения', description: 'Менеджер готовит КП на основе брифа, берёт тайм-аут.', estimatedTime: '2 дня', summary: 'КП подготовлено и направлено клиенту.', nextActions: 'Рассмотрите предложение и дайте обратную связь.', status: 'completed', startDate: '2026-03-03', endDate: '2026-03-05' },
-        { id: 2, title: 'Согласование и оплата', description: 'Подписание соглашения, фиксация договорённостей, внесение установочного платежа или ретейнера.', estimatedTime: '3 дня', summary: 'Договор подписан, оплата поступила.', nextActions: 'После оплаты передайте документы и информацию.', status: 'active', startDate: '2026-03-06', endDate: '2026-03-09' },
-        { id: 3, title: 'Передача информации', description: 'Клиент предоставляет необходимые документы, даёт пояснения.', estimatedTime: '2 дня', summary: 'Все материалы получены.', nextActions: 'Передайте документы и пояснения эксперту.', status: 'pending', startDate: '2026-03-10', endDate: '2026-03-12' },
-        { id: 4, title: 'Экспертный анализ', description: 'Эксперт изучает материалы, при необходимости задаёт уточняющие вопросы.', estimatedTime: '5–7 дней', summary: 'Анализ завершён, подготовлены выводы.', nextActions: 'Эксперт свяжется для уточнений.', status: 'pending', startDate: '2026-03-13', endDate: '2026-03-20' },
-        { id: 5, title: 'Презентация результатов', description: 'Эксперт представляет итоги анализа, модели поведения, рекомендованный вариант, передаёт письменный отчёт.', estimatedTime: '1 день', summary: 'Презентация проведена, отчёт передан.', nextActions: 'Ознакомьтесь с результатами, подготовьте вопросы.', status: 'pending', startDate: '2026-03-21', endDate: '2026-03-22' },
-        { id: 6, title: 'Обратная связь', description: 'Клиентский менеджер уточняет удовлетворённость работой эксперта и готовность к реализации.', estimatedTime: '1 день', summary: 'Обратная связь получена, определены следующие шаги.', nextActions: 'Сообщите ваши впечатления и планы.', status: 'pending', startDate: '2026-03-23', endDate: '2026-03-24' }
+        { id: 0, title: 'Брифинг и анализ задачи', description: 'Клиентский менеджер уточняет основные моменты задачи и ожидания по результату.', summary: 'Проведён первичный бриф, зафиксированы цели.', nextActions: 'Ожидайте коммерческое предложение.', status: 'completed', startDate: '2026-03-01', endDate: '2026-03-02' },
+        { id: 1, title: 'Подготовка коммерческого предложения', description: 'Менеджер готовит КП на основе брифа, берёт тайм-аут.', summary: 'КП подготовлено и направлено клиенту.', nextActions: 'Рассмотрите предложение и дайте обратную связь.', status: 'completed', startDate: '2026-03-03', endDate: '2026-03-05' },
+        { id: 2, title: 'Согласование и оплата', description: 'Подписание соглашения, фиксация договорённостей, внесение установочного платежа или ретейнера.', summary: 'Договор подписан, оплата поступила.', nextActions: 'После оплаты передайте документы и информацию.', status: 'active', startDate: '2026-03-06', endDate: '2026-03-09' },
+        { id: 3, title: 'Передача информации', description: 'Клиент предоставляет необходимые документы, даёт пояснения.', summary: 'Все материалы получены.', nextActions: 'Передайте документы и пояснения эксперту.', status: 'pending', startDate: '2026-03-10', endDate: '2026-03-12' },
+        { id: 4, title: 'Экспертный анализ', description: 'Эксперт изучает материалы, при необходимости задаёт уточняющие вопросы.', summary: 'Анализ завершён, подготовлены выводы.', nextActions: 'Эксперт свяжется для уточнений.', status: 'pending', startDate: '2026-03-13', endDate: '2026-03-20' },
+        { id: 5, title: 'Презентация результатов', description: 'Эксперт представляет итоги анализа, модели поведения, рекомендованный вариант, передаёт письменный отчёт.', summary: 'Презентация проведена, отчёт передан.', nextActions: 'Ознакомьтесь с результатами, подготовьте вопросы.', status: 'pending', startDate: '2026-03-21', endDate: '2026-03-22' },
+        { id: 6, title: 'Обратная связь', description: 'Клиентский менеджер уточняет удовлетворённость работой эксперта и готовность к реализации.', summary: 'Обратная связь получена, определены следующие шаги.', nextActions: 'Сообщите ваши впечатления и планы.', status: 'pending', startDate: '2026-03-23', endDate: '2026-03-24' }
       ]
     };
 
@@ -370,7 +390,7 @@
       }
     }
 
-    // Функция подсчёта рабочих дней (без субботы и воскресенья)
+    // Функции подсчёта дней (рабочие)
     function countWorkingDays(start, end) {
       if (!start || !end) return null;
       const startDate = new Date(start + 'T00:00:00');
@@ -379,28 +399,45 @@
       let count = 0;
       const current = new Date(startDate);
       while (current <= endDate) {
-        const day = current.getDay(); // 0 = воскресенье, 6 = суббота
+        const day = current.getDay();
         if (day !== 0 && day !== 6) count++;
         current.setDate(current.getDate() + 1);
       }
       return count;
     }
 
-    // Сколько рабочих дней осталось до endDate (от сегодня)
-    function remainingWorkingDays(end) {
-      if (!end) return null;
+    function elapsedWorkingDays(start) {
+      if (!start) return null;
+      const startDate = new Date(start + 'T00:00:00');
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const endDate = new Date(end + 'T23:59:59');
-      if (today > endDate) return -1; // просрочено
+      today.setHours(0,0,0,0);
+      if (today < startDate) return 0;
       let count = 0;
-      const current = new Date(today);
-      while (current <= endDate) {
+      const current = new Date(startDate);
+      while (current <= today) {
         const day = current.getDay();
         if (day !== 0 && day !== 6) count++;
         current.setDate(current.getDate() + 1);
       }
       return count;
+    }
+
+    // Для таймбара используем календарные дни (проще для восприятия)
+    function getOverallProgress(stages) {
+      const dates = stages.reduce((acc, s) => {
+        if (s.startDate) acc.push(new Date(s.startDate));
+        if (s.endDate) acc.push(new Date(s.endDate));
+        return acc;
+      }, []);
+      if (dates.length === 0) return null;
+      const start = new Date(Math.min(...dates));
+      const end = new Date(Math.max(...dates));
+      const today = new Date();
+      if (today < start) return 0;
+      if (today > end) return 100;
+      const total = end - start;
+      const elapsed = today - start;
+      return Math.round((elapsed / total) * 100);
     }
 
     function getStatusText(status) {
@@ -409,61 +446,55 @@
       return 'Предстоит';
     }
 
-    // Формирование описания с иконкой и дополнительной информацией
-    function getDescriptionWithIcon(stage) {
+    // Формирование описания без иконок
+    function getDescriptionText(stage) {
       if (stage.status === 'active') {
-        return { icon: '⏳', text: stage.description || '' };
+        return stage.description || '';
       } else if (stage.status === 'pending') {
-        // Для предстоит: описание + предполагаемые действия
-        let text = stage.description || '';
-        if (stage.nextActions) {
-          text += `\n\n👉 Что нужно сделать: ${stage.nextActions}`;
-        }
-        return { icon: '👉', text };
+        return stage.description || '';
       } else {
-        return { icon: '✅', text: stage.summary || '' };
+        return stage.summary || '';
       }
     }
 
-    // Переменные для аккордеона
-    let expandedStageId = null; // id этапа, который раскрыт (по умолчанию активный)
+    let expandedStageId = null;
 
     function render(data) {
       document.getElementById('clientNameDisplay').innerText = data.clientName;
-      document.getElementById('caseNameDisplay').innerText = 'Кейс: ' + data.caseName;
+      document.getElementById('caseNameDisplay').innerText = data.caseName;
 
-      // Прогресс
+      // Таймбар
+      const overall = getOverallProgress(data.stages);
+      const timelineContainer = document.getElementById('timelineContainer');
+      if (overall !== null) {
+        timelineContainer.style.display = 'flex';
+        document.getElementById('timelineProgress').style.width = overall + '%';
+        document.getElementById('timelinePercent').innerText = overall + '%';
+      } else {
+        timelineContainer.style.display = 'none';
+      }
+
+      // Прогресс (текстовый) – оставим для справки, но можем убрать, если не нужен
       const total = data.stages.length;
       const completedCount = data.stages.filter(s => s.status === 'completed').length;
       const activeStage = data.stages.find(s => s.status === 'active');
-      let progressText = '';
-      if (activeStage) {
-        const activeIndex = data.stages.findIndex(s => s.status === 'active') + 1;
-        progressText = `⏳ Этап ${activeIndex} из ${total}: ${activeStage.title}`;
-      } else {
-        progressText = `${completedCount} из ${total} этапов завершено`;
-      }
-      document.getElementById('progressText').innerText = progressText;
+      // Можно не выводить, но оставим как альтернативу (в html не используется)
 
       // Ответственный
-      const resp = data.responsible || { name: '', position: '', phone: '' };
+      const resp = data.responsible || {};
       const namePart = resp.name || '';
       const positionPart = resp.position ? `, ${resp.position}` : '';
-      const fullName = namePart + positionPart;
-      document.getElementById('responsibleNameDisplay').innerHTML = fullName;
+      document.getElementById('responsibleNameDisplay').innerHTML = namePart + positionPart;
       document.getElementById('responsiblePhoneDisplay').innerText = resp.phone || '';
-
-      // По умолчанию ответственный скрыт
       document.getElementById('responsibleDetails').classList.remove('expanded');
 
-      // --- Горизонтальный прогресс ---
+      // Горизонтальный прогресс
       const horizContainer = document.getElementById('progressHorizontal');
       horizContainer.innerHTML = '';
 
-      // Определяем, какой этап должен быть раскрыт. По умолчанию активный.
       if (expandedStageId === null) {
         const active = data.stages.find(s => s.status === 'active');
-        expandedStageId = active ? active.id : null;
+        expandedStageId = active ? active.id : (data.stages[0]?.id || null);
       }
 
       data.stages.forEach(stage => {
@@ -472,69 +503,51 @@
         if (stage.id === expandedStageId) stepDiv.classList.add('expanded');
         stepDiv.dataset.step = stage.id;
 
-        const desc = getDescriptionWithIcon(stage);
-        let etaHtml = '';
-        let daysHtml = '';
+        const descText = getDescriptionText(stage);
+        let extraHtml = '';
 
-        // Для активного этапа добавляем информацию о днях
+        // Для активного этапа добавляем "в работе X из Y дней"
         if (stage.status === 'active' && stage.startDate && stage.endDate) {
           const totalDays = countWorkingDays(stage.startDate, stage.endDate);
-          const remaining = remainingWorkingDays(stage.endDate);
-          if (totalDays !== null) {
-            if (remaining === -1) {
-              daysHtml = `<div class="days-left">⚠️ просрочено</div>`;
-            } else {
-              daysHtml = `<div class="days-left">осталось ${remaining} из ${totalDays} рабочих дней</div>`;
-            }
+          const elapsed = elapsedWorkingDays(stage.startDate);
+          if (totalDays !== null && elapsed !== null) {
+            extraHtml = `<div class="work-days-info">⏱️ в работе ${elapsed} из ${totalDays} дней</div>`;
           }
         }
 
-        // Собираем описание: иконка + текст + (если есть) daysHtml
-        let descriptionHtml = '';
-        if (desc.text) {
-          descriptionHtml = `
-            <div class="step-description">
-              <div><span style="font-weight: 600;">${desc.icon}</span> ${desc.text.replace(/\n/g, '<br>')}</div>
-              ${stage.estimatedTime ? `<div class="eta">⏱️ ${stage.estimatedTime}</div>` : ''}
-              ${daysHtml}
-            </div>
-          `;
+        // Для активного этапа добавляем ожидания от клиента
+        let expectationsHtml = '';
+        if (stage.status === 'active' && stage.nextActions) {
+          expectationsHtml = `<div style="margin-top: 8px; background: #eef6ff; padding: 8px; border-radius: 12px;"><strong>Ожидания от клиента:</strong> ${stage.nextActions}</div>`;
         }
 
         stepDiv.innerHTML = `
           <div class="circle">${stage.id + 1}</div>
           <div class="label">${stage.title}</div>
           <div class="status">${getStatusText(stage.status)}</div>
-          ${descriptionHtml}
+          <div class="hint-icon">🔽</div>
+          ${descText ? `<div class="step-description">${descText.replace(/\n/g, '<br>')}${extraHtml}${expectationsHtml}</div>` : ''}
         `;
+
         horizContainer.appendChild(stepDiv);
       });
 
-      if (data.stages.length >= 6) {
-        horizContainer.classList.add('scrollable');
-      } else {
-        horizContainer.classList.remove('scrollable');
-      }
+      if (data.stages.length >= 6) horizContainer.classList.add('scrollable');
+      else horizContainer.classList.remove('scrollable');
 
-      // --- Вертикальный прогресс ---
+      // Вертикальный прогресс
       const vertContainer = document.getElementById('progressVertical');
       vertContainer.innerHTML = '';
       data.stages.forEach(stage => {
-        const desc = getDescriptionWithIcon(stage);
-        let detailsText = desc.icon + ' ' + desc.text;
-        if (stage.status === 'active' && stage.estimatedTime) {
-          detailsText += `\n⏱️ ${stage.estimatedTime}`;
-        }
-        // Добавляем информацию о днях для активного
+        let detailsText = getDescriptionText(stage);
         if (stage.status === 'active' && stage.startDate && stage.endDate) {
           const totalDays = countWorkingDays(stage.startDate, stage.endDate);
-          const remaining = remainingWorkingDays(stage.endDate);
-          if (totalDays !== null) {
-            if (remaining === -1) {
-              detailsText += `\n⚠️ просрочено`;
-            } else {
-              detailsText += `\nосталось ${remaining} из ${totalDays} рабочих дней`;
-            }
+          const elapsed = elapsedWorkingDays(stage.startDate);
+          if (totalDays !== null && elapsed !== null) {
+            detailsText += `\n⏱️ в работе ${elapsed} из ${totalDays} дней`;
+          }
+          if (stage.nextActions) {
+            detailsText += `\n\nОжидания от клиента: ${stage.nextActions}`;
           }
         }
 
@@ -547,55 +560,39 @@
           <div class="content">
             <div class="label">${stage.title} <span class="status">${getStatusText(stage.status)}</span></div>
             <div class="details-text">${detailsText.replace(/\n/g, '<br>')}</div>
+            <div style="font-size:0.8rem; color:#8a9bb5; margin-top:4px;">🔽</div>
           </div>
         `;
         vertContainer.appendChild(stepDiv);
       });
     }
 
-    // Обработчик клика на этапе (горизонтальный)
+    // Обработчики кликов
     function handleStageClick(e) {
       const step = e.target.closest('.step-h, .step-v');
       if (!step) return;
       const stepId = step.dataset.step;
       if (stepId === undefined) return;
       const id = parseInt(stepId);
-
-      if (expandedStageId === id) {
-        // Если кликнули на уже открытый, закрываем? По условию всегда один открыт. Закрыть нельзя, только переключить.
-        // Оставим возможность закрыть, но по ТЗ должен быть всегда открыт один.
-        // Проще: если клик на открытый — ничего не делаем. Но чтобы можно было закрыть и открыть другой, разрешим.
-        // Лучше: всегда открываем кликнутый.
-      }
       expandedStageId = id;
-      // Перерисовываем с новым expandedStageId
-      fetchAndRender(); // или можно обновить только классы, но проще перерисовать
+      fetchAndRender();
     }
 
-    // Обработчик для ответственного
     function handleResponsibleClick() {
-      const details = document.getElementById('responsibleDetails');
-      details.classList.toggle('expanded');
+      document.getElementById('responsibleDetails').classList.toggle('expanded');
     }
 
-    // Функция загрузки и обновления
     async function fetchAndRender() {
       const data = await loadData();
       render(data);
     }
 
-    // Подписка на клики
-    document.addEventListener('click', function(e) {
-      if (e.target.closest('.step-h, .step-v')) {
-        handleStageClick(e);
-      } else if (e.target.closest('#responsibleBlock')) {
-        handleResponsibleClick();
-      }
+    document.addEventListener('click', e => {
+      if (e.target.closest('.step-h, .step-v')) handleStageClick(e);
+      else if (e.target.closest('#responsibleBlock')) handleResponsibleClick();
     });
 
-    // Первый запуск
     fetchAndRender();
-    // Обновление каждые 5 минут
     setInterval(fetchAndRender, 300000);
   })();
 </script>
