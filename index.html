@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* ========== СТИЛИ ========== */
+    /* ========== СТИЛИ (без изменений) ========== */
     :root {
       --primary: #1BA1FA;
       --primary-dark: #0B7FD4;
@@ -341,7 +341,6 @@
       flex-grow: 1;
     }
 
-    /* Блок для дат и кнопки материалов – всегда внизу */
     .stage-footer-h {
       margin-top: 12px;
       display: flex;
@@ -359,6 +358,23 @@
 
     .date-info svg { width: 14px; height: 14px; flex-shrink: 0; }
 
+    .manager-comment {
+      margin-top: 0px;
+      padding: 10px 14px;
+      background: rgba(27,161,250,0.06);
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--primary);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .manager-comment-label {
+      font-weight: 700; color: var(--primary-dark);
+      font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.04em; margin-bottom: 3px;
+    }
+
     .materials-link {
       display: inline-flex;
       align-items: center;
@@ -370,7 +386,7 @@
       color: var(--primary-dark);
       text-decoration: none;
       border: 1px solid var(--primary);
-      align-self: flex-end; /* прижимаем вправо */
+      align-self: flex-end;
     }
     .materials-link:hover { background: var(--primary); color: white; }
 
@@ -434,7 +450,6 @@
       line-height: 1.55; display: block;
     }
 
-    /* В вертикальной версии тоже добавим footer */
     .stage-v-footer {
       margin-top: 12px;
       display: flex;
@@ -565,7 +580,7 @@
 
       <div class="coordinator-toggle" id="coordToggle" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>Куратор</span> <!-- изменено -->
+        <span>Куратор</span>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
     </div>
@@ -713,7 +728,6 @@
     return stage.nextActions || '—';
   }
 
-  // Форматирование даты для периода
   function formatDateRange(start, end) {
     if (!start || !end) return '';
     const startDate = new Date(start + 'T00:00:00');
@@ -770,6 +784,13 @@
     });
   }
 
+  // Обработка ошибки загрузки аватарки
+  function handleAvatarError(img) {
+    const parent = img.parentNode;
+    const initials = parent.getAttribute('data-initials') || '?';
+    parent.innerHTML = initials;
+  }
+
   // Sticky header
   let stickyObserver = null;
   function initSticky(count) {
@@ -803,8 +824,13 @@
     if (exp.name) {
       coordToggle.style.display = '';
       const av = document.getElementById('coordAvatar');
-      av.innerHTML = exp.avatar ? `<img src="${exp.avatar}" alt="${exp.name}">` : '';
-      if (!exp.avatar) av.textContent = getInitials(exp.name);
+      const initials = getInitials(exp.name);
+      av.setAttribute('data-initials', initials);
+      if (exp.avatar) {
+        av.innerHTML = `<img src="${exp.avatar}" alt="${exp.name}" onerror="this.onerror=null; this.parentNode.innerHTML='${initials}';">`;
+      } else {
+        av.textContent = initials;
+      }
       document.getElementById('coordName').textContent = exp.name;
       document.getElementById('coordRole').textContent = '';
 
@@ -847,7 +873,13 @@
       card.className = `stage-card-h ${s.status} stage-animate`;
       card.style.animationDelay = `${i*0.08}s`;
 
-      // Формируем блок с датами (footer)
+      // Блок с ожиданиями от клиента (только для активного)
+      let expectationsHtml = '';
+      if (s.status === 'active' && s.nextActions) {
+        expectationsHtml = `<div class="manager-comment"><div class="manager-comment-label">Ожидания от клиента</div>${s.nextActions}</div>`;
+      }
+
+      // Даты
       let dateHtml = '';
       if (s.status === 'completed' && s.startDate && s.endDate) {
         dateHtml = `<div class="date-info">${clockSvg} ${formatDateRange(s.startDate, s.endDate)}</div>`;
@@ -858,11 +890,10 @@
           dateHtml = `<div class="date-info">${clockSvg} в работе ${elapsed} из ${totalDays} дней</div>`;
         }
       } else if (s.status === 'pending' && s.startDate) {
-        // для предстоит только дата начала
         dateHtml = `<div class="date-info" style="color: var(--text-muted);">${clockSvg} ${formatDate(s.startDate)}</div>`;
       }
 
-      // Материалы, если есть
+      // Материалы
       let materialsHtml = '';
       if (s.materials) {
         materialsHtml = `<a href="${s.materials}" target="_blank" class="materials-link">📎 материалы</a>`;
@@ -874,8 +905,9 @@
         <div class="stage-title-h">${s.title}</div>
         <div class="stage-details-h">${getDetailText(s)}</div>
         <div class="stage-footer-h">
-          ${dateHtml}
+          ${expectationsHtml}
           ${materialsHtml}
+          ${dateHtml}
         </div>
       `;
 
@@ -892,7 +924,11 @@
       el.className = `stage-v ${s.status} stage-animate`;
       el.style.animationDelay = `${i*0.08}s`;
 
-      // Аналогичный footer для вертикальной версии
+      let expectationsHtml = '';
+      if (s.status === 'active' && s.nextActions) {
+        expectationsHtml = `<div class="manager-comment"><div class="manager-comment-label">Ожидания от клиента</div>${s.nextActions}</div>`;
+      }
+
       let dateHtml = '';
       if (s.status === 'completed' && s.startDate && s.endDate) {
         dateHtml = `<div class="date-info">${clockSvg} ${formatDateRange(s.startDate, s.endDate)}</div>`;
@@ -920,8 +956,9 @@
           </div>
           <div class="stage-v-details">${getDetailText(s)}</div>
           <div class="stage-v-footer">
-            ${dateHtml}
+            ${expectationsHtml}
             ${materialsHtml}
+            ${dateHtml}
           </div>
         </div>
       `;
