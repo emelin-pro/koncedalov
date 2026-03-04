@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* ========== СТИЛИ ========== */
     :root {
       --primary: #1BA1FA;
       --primary-dark: #0B7FD4;
@@ -189,7 +190,7 @@
       overflow: hidden;
     }
 
-    .coordinator-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .coordinator-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     .coordinator-info { display: flex; flex-direction: column; }
     .coordinator-name { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); }
@@ -337,10 +338,10 @@
       font-size: 0.83rem;
       color: var(--text-secondary);
       line-height: 1.5;
-      display: block;
-      flex: 1; /* занимает всё доступное пространство, чтобы низ был выровнен */
+      flex-grow: 1;
     }
 
+    /* Блок для дат и кнопки материалов – всегда внизу */
     .stage-footer-h {
       margin-top: 12px;
       display: flex;
@@ -348,33 +349,15 @@
       gap: 8px;
     }
 
-    .detail-eta {
-      display: flex; align-items: center; gap: 5px;
-      font-weight: 600; color: var(--primary-dark); font-size: 0.8rem;
-    }
-
-    .pending .detail-eta {
-      color: var(--text-muted); /* серый для предстоит */
-    }
-
-    .detail-eta svg { width: 14px; height: 14px; flex-shrink: 0; }
-
-    .manager-comment {
-      margin-top: 10px;
-      padding: 10px 14px;
-      background: rgba(27,161,250,0.06);
-      border-radius: var(--radius-sm);
-      border-left: 3px solid var(--primary);
+    .date-info {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 600;
       font-size: 0.8rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
     }
 
-    .manager-comment-label {
-      font-weight: 700; color: var(--primary-dark);
-      font-size: 0.72rem; text-transform: uppercase;
-      letter-spacing: 0.04em; margin-bottom: 3px;
-    }
+    .date-info svg { width: 14px; height: 14px; flex-shrink: 0; }
 
     .materials-link {
       display: inline-flex;
@@ -387,7 +370,7 @@
       color: var(--primary-dark);
       text-decoration: none;
       border: 1px solid var(--primary);
-      width: fit-content;
+      align-self: flex-end; /* прижимаем вправо */
     }
     .materials-link:hover { background: var(--primary); color: white; }
 
@@ -449,6 +432,14 @@
       border-top: 1px dashed rgba(0,0,0,0.08);
       font-size: 0.88rem; color: var(--text-secondary);
       line-height: 1.55; display: block;
+    }
+
+    /* В вертикальной версии тоже добавим footer */
+    .stage-v-footer {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .case-footer {
@@ -574,7 +565,7 @@
 
       <div class="coordinator-toggle" id="coordToggle" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>Куратор</span>
+        <span>Куратор</span> <!-- изменено -->
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
     </div>
@@ -631,7 +622,7 @@
   const defaultData = {
     caseName: 'Стратегический аудит ситуации и выбор модели исполнения обязательств',
     clientName: 'Концедалов С.И.',
-    kurator: {  // переименовано
+    expert: {
       name: 'Иван Петров',
       avatar: '',
       phone: '+7 (999) 123-45-67',
@@ -722,8 +713,8 @@
     return stage.nextActions || '—';
   }
 
-  // Форматирование периода
-  function formatPeriod(start, end) {
+  // Форматирование даты для периода
+  function formatDateRange(start, end) {
     if (!start || !end) return '';
     const startDate = new Date(start + 'T00:00:00');
     const endDate = new Date(end + 'T23:59:59');
@@ -734,11 +725,20 @@
     const endMonth = (endDate.getMonth()+1).toString().padStart(2,'0');
     const endYear = endDate.getFullYear();
 
-    if (startYear === endYear) {
-      return `${startDay}.${startMonth} - ${endDay}.${endMonth}.${endYear}`;
-    } else {
+    if (startYear !== endYear) {
       return `${startDay}.${startMonth}.${startYear} - ${endDay}.${endMonth}.${endYear}`;
+    } else {
+      return `${startDay}.${startMonth} - ${endDay}.${endMonth}.${endYear}`;
     }
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    const day = d.getDate().toString().padStart(2,'0');
+    const month = (d.getMonth()+1).toString().padStart(2,'0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
   }
 
   function updateTimestamp() {
@@ -748,7 +748,11 @@
       `Обновлено ${pad(now.getDate())}.${pad(now.getMonth()+1)}.${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
   }
 
-  const clockIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+  // SVGs
+  const phoneSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>';
+  const waSvg='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.111.547 4.099 1.504 5.832L0 24l6.335-1.652A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.903 0-3.727-.528-5.313-1.527l-.38-.228-3.758.981.999-3.648-.25-.396A9.768 9.768 0 0 1 2.182 12c0-5.423 4.395-9.818 9.818-9.818S21.818 6.577 21.818 12s-4.395 9.818-9.818 9.818z"/></svg>';
+  const tgSvg='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 1 0 24 12.056A12.01 12.01 0 0 0 11.944 0Zm5.654 8.26-1.97 9.293c-.146.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.334-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.832.928Z"/></svg>';
+  const clockSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
 
   // Coordinator toggle
   const coordToggle = document.getElementById('coordToggle');
@@ -766,6 +770,7 @@
     });
   }
 
+  // Sticky header
   let stickyObserver = null;
   function initSticky(count) {
     const header = document.getElementById('stickyHeader');
@@ -794,33 +799,29 @@
     document.getElementById('clientNameDisplay').textContent = data.clientName || '—';
     document.getElementById('caseTitleDisplay').textContent = data.caseName || '—';
 
-    const kurator = data.kurator || {};
-    if (kurator.name) {
+    const exp = data.expert || {};
+    if (exp.name) {
       coordToggle.style.display = '';
       const av = document.getElementById('coordAvatar');
-      if (kurator.avatar) {
-        av.innerHTML = `<img src="${kurator.avatar}" alt="${kurator.name}">`;
-      } else {
-        av.textContent = getInitials(kurator.name);
-        av.style.background = 'linear-gradient(135deg, var(--primary), #50C3FF)'; // оставляем цвет
-      }
-      document.getElementById('coordName').textContent = kurator.name;
+      av.innerHTML = exp.avatar ? `<img src="${exp.avatar}" alt="${exp.name}">` : '';
+      if (!exp.avatar) av.textContent = getInitials(exp.name);
+      document.getElementById('coordName').textContent = exp.name;
       document.getElementById('coordRole').textContent = '';
 
       const c = document.getElementById('coordContacts');
       c.innerHTML = '';
-      if (kurator.phone) {
-        const cl = kurator.phone.replace(/[^\d+]/g, '');
+      if (exp.phone) {
+        const cl = exp.phone.replace(/[^\d+]/g, '');
         c.innerHTML += `<a class="contact-btn" href="tel:${cl}">${phoneSvg}<span>Позвонить</span></a>`;
         c.innerHTML += `<a class="contact-icon-btn" href="tel:${cl}" title="Позвонить">${phoneSvg}</a>`;
       }
-      if (kurator.telegram) {
-        const tg = kurator.telegram.replace('@','');
+      if (exp.telegram) {
+        const tg = exp.telegram.replace('@','');
         c.innerHTML += `<a class="contact-btn" href="https://t.me/${tg}" target="_blank">${tgSvg}<span>Telegram</span></a>`;
         c.innerHTML += `<a class="contact-icon-btn" href="https://t.me/${tg}" target="_blank" title="Telegram">${tgSvg}</a>`;
       }
-      if (kurator.whatsapp) {
-        const wa = kurator.whatsapp.replace(/[^\d]/g, '');
+      if (exp.whatsapp) {
+        const wa = exp.whatsapp.replace(/[^\d]/g, '');
         c.innerHTML += `<a class="contact-btn" href="https://wa.me/${wa}" target="_blank">${waSvg}<span>WhatsApp</span></a>`;
         c.innerHTML += `<a class="contact-icon-btn" href="https://wa.me/${wa}" target="_blank" title="WhatsApp">${waSvg}</a>`;
       }
@@ -846,45 +847,36 @@
       card.className = `stage-card-h ${s.status} stage-animate`;
       card.style.animationDelay = `${i*0.08}s`;
 
-      let details = `<div class="stage-details-h">`;
-      details += `<div>${getDetailText(s)}</div>`;
-      // Для активного этапа добавляем ожидания внутри деталей
-      if (s.status === 'active' && s.nextActions) {
-        details += `<div class="manager-comment"><div class="manager-comment-label">Ожидания от клиента</div>${s.nextActions}</div>`;
-      }
-      details += '</div>';
-
-      // Футер (дата + материалы)
-      let footer = '<div class="stage-footer-h">';
-
-      // Для завершённых и предстоит – период
-      if (s.status === 'completed' && s.endDate) {
-        footer += `<div class="detail-eta">${clockIcon} ${formatPeriod(s.startDate, s.endDate)}</div>`;
-      } else if (s.status === 'pending' && s.startDate && s.endDate) {
-        // для предстоит показываем период начала-окончания (или только начало?)
-        // по заданию: иконка и дата начала работы по этапу (наверное, период с начала до конца)
-        footer += `<div class="detail-eta">${clockIcon} ${formatPeriod(s.startDate, s.endDate)}</div>`;
+      // Формируем блок с датами (footer)
+      let dateHtml = '';
+      if (s.status === 'completed' && s.startDate && s.endDate) {
+        dateHtml = `<div class="date-info">${clockSvg} ${formatDateRange(s.startDate, s.endDate)}</div>`;
       } else if (s.status === 'active') {
         const totalDays = countWorkingDays(s.startDate, s.endDate);
         const elapsed = elapsedWorkingDays(s.startDate);
         if (totalDays !== null && elapsed !== null) {
-          footer += `<div class="detail-eta">${clockIcon} в работе ${elapsed} из ${totalDays} дней</div>`;
+          dateHtml = `<div class="date-info">${clockSvg} в работе ${elapsed} из ${totalDays} дней</div>`;
         }
+      } else if (s.status === 'pending' && s.startDate) {
+        // для предстоит только дата начала
+        dateHtml = `<div class="date-info" style="color: var(--text-muted);">${clockSvg} ${formatDate(s.startDate)}</div>`;
       }
 
-      // Материалы
+      // Материалы, если есть
+      let materialsHtml = '';
       if (s.materials) {
-        footer += `<a href="${s.materials}" target="_blank" class="materials-link">📎 материалы</a>`;
+        materialsHtml = `<a href="${s.materials}" target="_blank" class="materials-link">📎 материалы</a>`;
       }
-
-      footer += '</div>';
 
       card.innerHTML = `
         <div class="stage-number">${i+1}</div>
         <div class="stage-status-badge">${statusText(s.status)}</div>
         <div class="stage-title-h">${s.title}</div>
-        ${details}
-        ${footer}
+        <div class="stage-details-h">${getDetailText(s)}</div>
+        <div class="stage-footer-h">
+          ${dateHtml}
+          ${materialsHtml}
+        </div>
       `;
 
       hC.appendChild(card);
@@ -900,32 +892,24 @@
       el.className = `stage-v ${s.status} stage-animate`;
       el.style.animationDelay = `${i*0.08}s`;
 
-      let details = `<div class="stage-v-details">`;
-      details += `<div>${getDetailText(s)}</div>`;
-
-      // Для активного добавляем ожидания
-      if (s.status === 'active' && s.nextActions) {
-        details += `<div class="manager-comment"><div class="manager-comment-label">Ожидания от клиента</div>${s.nextActions}</div>`;
-      }
-
-      // Для всех статусов добавляем период
-      if (s.status === 'completed' && s.endDate) {
-        details += `<div class="detail-eta">${clockIcon} ${formatPeriod(s.startDate, s.endDate)}</div>`;
-      } else if (s.status === 'pending' && s.startDate && s.endDate) {
-        details += `<div class="detail-eta" style="color:var(--text-muted);">${clockIcon} ${formatPeriod(s.startDate, s.endDate)}</div>`;
+      // Аналогичный footer для вертикальной версии
+      let dateHtml = '';
+      if (s.status === 'completed' && s.startDate && s.endDate) {
+        dateHtml = `<div class="date-info">${clockSvg} ${formatDateRange(s.startDate, s.endDate)}</div>`;
       } else if (s.status === 'active') {
         const totalDays = countWorkingDays(s.startDate, s.endDate);
         const elapsed = elapsedWorkingDays(s.startDate);
         if (totalDays !== null && elapsed !== null) {
-          details += `<div class="detail-eta">${clockIcon} в работе ${elapsed} из ${totalDays} дней</div>`;
+          dateHtml = `<div class="date-info">${clockSvg} в работе ${elapsed} из ${totalDays} дней</div>`;
         }
+      } else if (s.status === 'pending' && s.startDate) {
+        dateHtml = `<div class="date-info" style="color: var(--text-muted);">${clockSvg} ${formatDate(s.startDate)}</div>`;
       }
 
+      let materialsHtml = '';
       if (s.materials) {
-        details += `<a href="${s.materials}" target="_blank" class="materials-link">📎 материалы</a>`;
+        materialsHtml = `<a href="${s.materials}" target="_blank" class="materials-link">📎 материалы</a>`;
       }
-
-      details += '</div>';
 
       el.innerHTML = `
         <div class="stage-number">${i+1}</div>
@@ -934,8 +918,13 @@
             <div class="stage-status-badge">${statusText(s.status)}</div>
             <div class="stage-v-title">${s.title}</div>
           </div>
-          ${details}
-        </div>`;
+          <div class="stage-v-details">${getDetailText(s)}</div>
+          <div class="stage-v-footer">
+            ${dateHtml}
+            ${materialsHtml}
+          </div>
+        </div>
+      `;
 
       vC.appendChild(el);
     });
@@ -957,13 +946,8 @@
     render(data);
   }
 
-  // SVGs для контактов
-  const phoneSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>';
-  const waSvg='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.111.547 4.099 1.504 5.832L0 24l6.335-1.652A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.903 0-3.727-.528-5.313-1.527l-.38-.228-3.758.981.999-3.648-.25-.396A9.768 9.768 0 0 1 2.182 12c0-5.423 4.395-9.818 9.818-9.818S21.818 6.577 21.818 12s-4.395 9.818-9.818 9.818z"/></svg>';
-  const tgSvg='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 1 0 24 12.056A12.01 12.01 0 0 0 11.944 0Zm5.654 8.26-1.97 9.293c-.146.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.334-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.832.928Z"/></svg>';
-
   fetchAndRender();
-  setInterval(fetchAndRender, 28800000);
+  setInterval(fetchAndRender, 28800000); // 8 часов
 })();
 </script>
 </body>
